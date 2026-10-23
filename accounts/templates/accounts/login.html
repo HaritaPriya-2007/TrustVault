@@ -1,0 +1,73 @@
+﻿{% extends "documents/base.html" %} {% block title %}Sign In | TrustVault{% endblock %} {% block body %}
+<div class="auth-page">
+  <div class="auth-layout">
+    <section class="auth-aside">
+      <a class="brand" href="{% url 'login' %}">
+        <span class="brand-mark">â¬¡</span>
+        <span class="brand-name">TrustVault</span>
+      </a>
+
+      <div>
+        <span class="tag">SECURE DOCUMENT WORKSPACE</span>
+        <h1 style="margin-top: 22px">
+          Your documents.<br />Under your control.
+        </h1>
+        <p>
+          One secure place to store documents and manage who can access them.
+        </p>
+        <div class="auth-feature">
+          <strong>â—ˆ Access-controlled sharing</strong>
+          <p style="margin: 6px 0 0">
+            Permissions designed around the documents you own and share.
+          </p>
+        </div>
+        <div class="auth-feature" style="margin-top: 12px">
+          <strong>âœ“ Activity visibility</strong>
+          <p style="margin: 6px 0 0">
+            Auditable document actions within your workspace.
+          </p>
+        </div>
+      </div>
+
+      <p class="muted">PRIVATE BY DESIGN Â· TRUSTVAULT</p>
+    </section>
+
+    <section class="auth-form">
+      <p class="tag">WELCOME BACK</p>
+      <h2>Sign in to your vault</h2>
+      <p class="subtitle">Enter your account credentials to continue.</p>
+
+      {% if form.errors %}
+      <div class="error" role="alert" style="margin-top: 18px">
+        Your username or password wasn't accepted. Please try again.
+      </div>
+      {% endif %} {% if next %} {% if user.is_authenticated %}
+      <div class="error" role="alert" style="margin-top: 18px">
+        This account doesn't have permission to access that page.
+      </div>
+      {% endif %} {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next|default:'' }}" />
+
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }} {% if form.non_field_errors %}
+        <div class="error" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <button class="button" type="submit">Sign in securely â†’</button>
+      </form>
+
+      <div class="divider"></div>
+      <p class="muted">
+        Access is controlled by your TrustVault account permissions.
+      </p>
+    </section>
+  </div>
+</div>
+{% endblock %}
+

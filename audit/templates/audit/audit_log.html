@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TrustVault | Audit Log</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f4f7fb;
+        color: #172033;
+      }
+      .container {
+        max-width: 1200px;
+        margin: auto;
+      }
+      .panel {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px #0000000d;
+      }
+      .valid {
+        color: #137547;
+        font-weight: bold;
+      }
+      .invalid {
+        color: #b42318;
+        font-weight: bold;
+      }
+      form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      select,
+      button {
+        padding: 10px;
+        border: 1px solid #ccd3df;
+        border-radius: 6px;
+      }
+      button {
+        background: #173b70;
+        color: white;
+        cursor: pointer;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e6eaf0;
+        white-space: nowrap;
+      }
+      th {
+        background: #edf2f8;
+      }
+      .details {
+        white-space: normal;
+        max-width: 280px;
+      }
+      a {
+        color: #174ea6;
+      }
+      .pagination {
+        display: flex;
+        gap: 14px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>TrustVault Audit Log</h1>
+      <p>Review recorded activity and verify audit-event integrity.</p>
+
+      <section class="panel">
+        {% if chain_valid %}
+        <p class="valid">Audit chain integrity: VERIFIED</p>
+        {% else %}
+        <p class="invalid">Audit chain integrity: VERIFICATION FAILED</p>
+        <ul>
+          {% for error in chain_errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <form method="get">
+          <select name="action">
+            <option value="">All actions</option>
+            {% for value, label in actions %}
+            <option
+              value="{{ value }}"
+              {%
+              if
+              selected_action=""
+              ="value"
+              %}selected{%
+              endif
+              %}
+            >
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+
+          <select name="status">
+            <option value="">All outcomes</option>
+            <option
+              value="success"
+              {%
+              if
+              selected_status=""
+              ="success"
+              %}selected{%
+              endif
+              %}
+            >
+              Successful
+            </option>
+            <option
+              value="failed"
+              {%
+              if
+              selected_status=""
+              ="failed"
+              %}selected{%
+              endif
+              %}
+            >
+              Failed
+            </option>
+          </select>
+
+          <button type="submit">Filter</button>
+          <a href="{% url 'audit:audit_log' %}">Clear filters</a>
+        </form>
+      </section>
+
+      <section class="panel table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Document</th>
+              <th>Outcome</th>
+              <th>IP address</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in page_obj %}
+            <tr>
+              <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td>
+                {% if event.actor %} {{ event.actor }} {% else %} System /
+                deleted user {% endif %}
+              </td>
+              <td>{{ event.get_action_display }}</td>
+              <td>
+                {% if event.document %} {{ event.document.title }} {% else %} —
+                {% endif %}
+              </td>
+              <td>{% if event.success %}Success{% else %}Failed{% endif %}</td>
+              <td>{{ event.ip_address|default:"—" }}</td>
+              <td class="details">{{ event.details }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">No audit events match these filters.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          {% if page_obj.has_previous %}
+          <a
+            href="?action={{ selected_action|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.previous_page_number }}"
+            >Previous</a
+          >
+          {% endif %}
+
+          <span
+            >Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages
+            }}</span
+          >
+
+          {% if page_obj.has_next %}
+          <a
+            href="?action={{ selected_action|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.next_page_number }}"
+            >Next</a
+          >
+          {% endif %}
+        </div>
+      </section>
+
+      <p><a href="/documents/">Back to documents</a></p>
+    </div>
+  </body>
+</html>

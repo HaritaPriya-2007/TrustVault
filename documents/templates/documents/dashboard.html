@@ -1,0 +1,43 @@
+﻿{% extends "documents/base.html" %} {% block title %}Dashboard | TrustVault{% endblock %} {% block body %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Welcome back, {{ request.user.username }}.</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <p>Total Accessible Documents</p>
+    <h2>{{ total_documents }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <p>Documents You Own</p>
+    <h2>{{ owned_documents }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <p>Shared With You</p>
+    <h2>{{ shared_documents }}</h2>
+  </div>
+</div>
+
+<div class="content-card">
+  <h2>Quick Actions</h2>
+  <p>Manage your secure documents from here.</p>
+
+  <div class="action-buttons">
+    <a href="{% url 'my_documents' %}" class="btn btn-primary">
+      My Documents
+    </a>
+
+    {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
+    <a href="{% url 'upload_document' %}" class="btn btn-secondary">
+      Upload Document
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

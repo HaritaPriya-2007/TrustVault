@@ -1,0 +1,89 @@
+{% extends "documents/base.html" %} {% block title %}Upload Document |
+TrustVault{% endblock %} {% block body %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'my_documents' %}">
+      <span class="brand-mark">⬡</span>
+      <span class="brand-name">TrustVault</span>
+    </a>
+    <div class="nav-label">Workspace</div>
+    <nav class="nav">
+      <a href="{% url 'my_documents' %}"
+        ><span class="nav-icon">▦</span
+        ><span class="nav-text">My Documents</span></a
+      >
+      <a href="{% url 'upload_document' %}" class="active"
+        ><span class="nav-icon">＋</span><span class="nav-text">Upload</span></a
+      >
+    </nav>
+    <div class="sidebar-bottom">PRIVATE DOCUMENT WORKSPACE</div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div>
+        <span class="topbar-label">WORKSPACE / UPLOAD</span
+        ><strong>Upload document</strong>
+      </div>
+      <div class="user-pill">
+        <span class="avatar">{{ request.user.username|first|upper }}</span>{{
+        request.user.username }}
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="page-heading">
+        <div>
+          <h1>Add to your vault</h1>
+          <p class="subtitle">Store a document in your private workspace.</p>
+        </div>
+        <a class="button secondary" href="{% url 'my_documents' %}"
+          >← My Documents</a
+        >
+      </div>
+
+      <section class="card">
+        <div class="file-icon" style="margin-bottom: 16px">＋</div>
+        <h2>Document details</h2>
+        <p class="subtitle">
+          Complete the fields below. Fields marked required must be filled in.
+        </p>
+
+        {% if error %}
+        <div class="error" role="alert">{{ error }}</div>
+        {% endif %} {% if form.errors %}
+        <div class="error" role="alert">{{ form.errors }}</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %} {{ form.non_field_errors }}
+
+          <label for="{{ form.title.id_for_label }}">Document title</label>
+          {{ form.title }}{{ form.title.errors }}
+
+          <label for="{{ form.category.id_for_label }}">Category</label>
+          {{ form.category }}{{ form.category.errors }}
+
+          <label for="{{ form.description.id_for_label }}">Description</label>
+          {{ form.description }}{{ form.description.errors }}
+
+          <label for="{{ form.file.id_for_label }}">Choose a file</label>
+          {{ form.file }}
+          <p class="help">
+            Allowed extensions: PDF, TXT, DOCX, XLSX, PNG, JPG, JPEG. Maximum
+            size: 10 MB.
+          </p>
+          {{ form.file.errors }}
+
+          <div class="button-row" style="margin-top: 24px">
+            <button type="submit" class="button">Upload securely →</button>
+            <a class="button secondary" href="{% url 'my_documents' %}"
+              >Cancel</a
+            >
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+{% endblock %}

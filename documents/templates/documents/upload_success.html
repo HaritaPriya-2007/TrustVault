@@ -1,0 +1,65 @@
+{% extends "documents/base.html" %} {% block title %}Upload Complete |
+TrustVault{% endblock %} {% block body %}
+<div class="auth-page">
+  <section class="card" style="width: 100%; max-width: 620px; padding: 38px">
+    <a
+      class="brand"
+      href="{% url 'my_documents' %}"
+      style="color: var(--navy); padding: 0"
+    >
+      <span class="brand-mark">⬡</span>
+      <span class="brand-name">TrustVault</span>
+    </a>
+
+    <div style="text-align: center; padding: 30px 0 20px">
+      <div
+        style="
+          margin: auto auto 18px;
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          background: #dcfce7;
+          color: #087f5b;
+          font-size: 35px;
+        "
+      >
+        ✓
+      </div>
+      <span class="tag">UPLOAD COMPLETE</span>
+      <h1 style="margin-top: 16px">Your document is in the vault</h1>
+      <p class="subtitle">The upload process completed successfully.</p>
+    </div>
+
+    <div class="card" style="box-shadow: none; background: #f8faff">
+      <p class="muted" style="margin-bottom: 4px">DOCUMENT TITLE</p>
+      <h2 style="margin: 0 0 16px; overflow-wrap: anywhere">
+        {{ document.title }}
+      </h2>
+
+      <p class="muted" style="margin-bottom: 4px">CATEGORY</p>
+      <p style="margin-bottom: 16px">{{ document.category }}</p>
+
+      <p class="muted" style="margin-bottom: 4px">ORIGINAL FILENAME</p>
+      <p style="overflow-wrap: anywhere; margin-bottom: 0">
+        {{ document.original_filename }}
+      </p>
+    </div>
+
+    <div class="button-row" style="justify-content: center; margin-top: 24px">
+      <a
+        class="button"
+        href="{% url 'download_document' document_id=document.pk %}"
+        >↓ Download document</a
+      >
+      <a class="button secondary" href="{% url 'my_documents' %}"
+        >My Documents</a
+      >
+    </div>
+    <p class="muted" style="text-align: center; margin: 22px 0 0">
+      Your access permissions still apply when downloading.
+    </p>
+  </section>
+</div>
+{% endblock %}
