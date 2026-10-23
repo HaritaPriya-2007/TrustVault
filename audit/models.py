@@ -59,13 +59,10 @@ class AuditEvent(models.Model):
         )
         self.event_hash = ""
 
-        # Save first to obtain the final timestamp and primary key.
         super().save(*args, **kwargs)
 
-        # Calculate the hash from the saved event.
         self.event_hash = calculate_event_hash(self)
 
-        # Update only the hash field; don't change the timestamp.
         type(self).objects.using(self._state.db).filter(
             pk=self.pk
         ).update(event_hash=self.event_hash)

@@ -1,43 +1,62 @@
-﻿{% extends "documents/base.html" %} {% block title %}Dashboard | TrustVault{% endblock %} {% block body %}
-<div class="page-header">
-  <div>
-    <h1>Dashboard</h1>
-    <p>Welcome back, {{ request.user.username }}.</p>
-  </div>
-</div>
+﻿{% extends "documents/base.html" %}
 
-<div class="stats-grid">
-  <div class="stat-card">
-    <p>Total Accessible Documents</p>
-    <h2>{{ total_documents }}</h2>
-  </div>
+{% block title %}Board | TrustVault{% endblock %}
 
-  <div class="stat-card">
-    <p>Documents You Own</p>
-    <h2>{{ owned_documents }}</h2>
-  </div>
+{% block body %}
+<div class="shell">
+  {% include "documents/_chrome.html" with nav="board" %}
 
-  <div class="stat-card">
-    <p>Shared With You</p>
-    <h2>{{ shared_documents }}</h2>
-  </div>
-</div>
+  <div class="stage">
+    <header class="mast">
+      <div>
+        <div class="muted">VAULT / BOARD</div>
+        <strong>Custody board</strong>
+      </div>
+      <div class="who">
+        <b>{{ request.user.username|first|upper }}</b>
+        <span>{{ request.user.username }} &middot; {{ request.user.get_role_display }}</span>
+      </div>
+    </header>
 
-<div class="content-card">
-  <h2>Quick Actions</h2>
-  <p>Manage your secure documents from here.</p>
+    <main class="page">
+      <div class="head">
+        <div>
+          <h1>What you can actually reach</h1>
+          <p class="lede">Counts cover owned files and live grants only. Hidden files are not listed here.</p>
+        </div>
+      </div>
 
-  <div class="action-buttons">
-    <a href="{% url 'my_documents' %}" class="btn btn-primary">
-      My Documents
-    </a>
+      <div class="stats">
+        <div class="stat">
+          <span class="muted">In reach</span>
+          <strong>{{ reachable_count }}</strong>
+        </div>
+        <div class="stat">
+          <span class="muted">Held as owner</span>
+          <strong>{{ owned_count }}</strong>
+        </div>
+        <div class="stat">
+          <span class="muted">Received by grant</span>
+          <strong>{{ received_count }}</strong>
+        </div>
+      </div>
 
-    {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
-    <a href="{% url 'upload_document' %}" class="btn btn-secondary">
-      Upload Document
-    </a>
-    {% endif %}
+      <section class="panel">
+        <h2>Next step</h2>
+        <p class="lede">Open the shelf to search, or lodge a file if your role allows it.</p>
+        <p>
+          <a class="btn" href="{% url 'my_documents' %}">Open the shelf</a>
+          {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
+            <a class="btn quiet" href="{% url 'upload_document' %}">Lodge a file</a>
+          {% endif %}
+        </p>
+      </section>
+
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 22px; text-align: right">
+        {% csrf_token %}
+        <button class="btn quiet" type="submit">Sign out</button>
+      </form>
+    </main>
   </div>
 </div>
 {% endblock %}
-

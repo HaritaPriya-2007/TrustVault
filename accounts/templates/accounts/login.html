@@ -1,73 +1,358 @@
-﻿{% extends "documents/base.html" %} {% block title %}Sign In | TrustVault{% endblock %} {% block body %}
+{% extends "documents/base.html" %}
+
+{% block title %}Sign In | TrustVault{% endblock %}
+
+{% block body %}
+<style>
+  .auth-page {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px;
+  }
+
+  .auth-layout {
+    width: 100%;
+    max-width: 960px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: 22px;
+    background: var(--surface, #ffffff);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.09);
+  }
+
+  .auth-aside {
+    padding: 48px 38px;
+    color: #ffffff;
+    background: linear-gradient(145deg, #10233f, #174b79);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .auth-brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 20px;
+  }
+
+  .auth-eyebrow {
+    margin-top: 48px;
+    color: #a8ddff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .auth-aside h1 {
+    margin: 14px 0;
+    color: #ffffff;
+    font-size: clamp(30px, 4vw, 43px);
+    line-height: 1.12;
+    letter-spacing: -1.5px;
+  }
+
+  .auth-aside p {
+    color: #d5e5f5;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .auth-features {
+    display: grid;
+    gap: 15px;
+    margin-top: 30px;
+  }
+
+  .auth-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #f0f7ff;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .auth-feature-icon {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.13);
+  }
+
+  .auth-aside-footer {
+    margin-top: 42px;
+    color: #b9d0e6;
+    font-size: 11px;
+  }
+
+  .auth-form {
+    padding: 48px 38px;
+    color: var(--text, #172033);
+  }
+
+  .auth-form h2 {
+    margin: 0 0 8px;
+    font-size: 29px;
+    letter-spacing: -0.8px;
+  }
+
+  .auth-subtitle {
+    margin: 0 0 28px;
+    color: var(--muted, #64748b);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .auth-label {
+    display: block;
+    margin: 18px 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .auth-input {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid var(--line, #dbe3ee);
+    border-radius: 10px;
+    background: var(--surface, #ffffff);
+    color: var(--text, #172033);
+    font: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .auth-input:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.13);
+  }
+
+  .auth-submit {
+    width: 100%;
+    min-height: 47px;
+    margin-top: 24px;
+    border: none;
+    border-radius: 10px;
+    background: #1769aa;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 750;
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      transform 0.2s;
+  }
+
+  .auth-submit:hover {
+    background: #10558d;
+    transform: translateY(-1px);
+  }
+
+  .auth-error {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff1f2;
+    color: #9f1239;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .auth-notice {
+    margin-top: 22px;
+    padding: 13px;
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: 10px;
+    color: var(--muted, #64748b);
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .auth-back {
+    display: inline-block;
+    margin-top: 20px;
+    color: #1769aa;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .auth-back:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 700px) {
+    .auth-layout {
+      max-width: 460px;
+      grid-template-columns: 1fr;
+    }
+
+    .auth-aside {
+      padding: 30px 25px;
+    }
+
+    .auth-eyebrow {
+      margin-top: 28px;
+    }
+
+    .auth-aside h1 {
+      font-size: 32px;
+    }
+
+    .auth-features {
+      margin-top: 22px;
+    }
+
+    .auth-aside-footer {
+      margin-top: 24px;
+    }
+
+    .auth-form {
+      padding: 32px 25px;
+    }
+  }
+</style>
+
 <div class="auth-page">
   <div class="auth-layout">
     <section class="auth-aside">
-      <a class="brand" href="{% url 'login' %}">
-        <span class="brand-mark">â¬¡</span>
-        <span class="brand-name">TrustVault</span>
-      </a>
-
       <div>
-        <span class="tag">SECURE DOCUMENT WORKSPACE</span>
-        <h1 style="margin-top: 22px">
-          Your documents.<br />Under your control.
-        </h1>
-        <p>
-          One secure place to store documents and manage who can access them.
-        </p>
-        <div class="auth-feature">
-          <strong>â—ˆ Access-controlled sharing</strong>
-          <p style="margin: 6px 0 0">
-            Permissions designed around the documents you own and share.
-          </p>
+        <div class="auth-brand">
+          <span class="auth-brand-mark">TV</span>
+          <span>TrustVault</span>
         </div>
-        <div class="auth-feature" style="margin-top: 12px">
-          <strong>âœ“ Activity visibility</strong>
-          <p style="margin: 6px 0 0">
-            Auditable document actions within your workspace.
-          </p>
+
+        <div class="auth-eyebrow">Secure document workspace</div>
+
+        <h1>Your documents.<br />Under your control.</h1>
+
+        <p>
+          A secure workspace for managing private files, controlling access, and
+          maintaining a traceable record of document activity.
+        </p>
+
+        <div class="auth-features">
+          <div class="auth-feature">
+            <span class="auth-feature-icon">&#10003;</span>
+            <span
+              ><strong>Controlled access</strong><br />
+              Access depends on your account permissions.</span
+            >
+          </div>
+
+          <div class="auth-feature">
+            <span class="auth-feature-icon">&#128274;</span>
+            <span
+              ><strong>Private documents</strong><br />
+              Protected document storage and authorized downloads.</span
+            >
+          </div>
+
+          <div class="auth-feature">
+            <span class="auth-feature-icon">&#9678;</span>
+            <span
+              ><strong>Activity tracking</strong><br />
+              Document operations can be recorded in the audit ledger.</span
+            >
+          </div>
         </div>
       </div>
 
-      <p class="muted">PRIVATE BY DESIGN Â· TRUSTVAULT</p>
+      <div class="auth-aside-footer">TRUSTVAULT &bull; PRIVATE BY DESIGN</div>
     </section>
 
     <section class="auth-form">
-      <p class="tag">WELCOME BACK</p>
-      <h2>Sign in to your vault</h2>
-      <p class="subtitle">Enter your account credentials to continue.</p>
+      <h2>Welcome back</h2>
+      <p class="auth-subtitle">
+        Sign in with your TrustVault account to continue.
+      </p>
 
-      {% if form.errors %}
-      <div class="error" role="alert" style="margin-top: 18px">
-        Your username or password wasn't accepted. Please try again.
+      {% if messages %} {% for message in messages %}
+      <div class="auth-error">{{ message }}</div>
+      {% endfor %} {% endif %} {% if form.non_field_errors %}
+      <div class="auth-error">
+        {% for error in form.non_field_errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
       </div>
-      {% endif %} {% if next %} {% if user.is_authenticated %}
-      <div class="error" role="alert" style="margin-top: 18px">
-        This account doesn't have permission to access that page.
-      </div>
-      {% endif %} {% endif %}
+      {% endif %}
 
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next|default:'' }}" />
-
-        <label for="{{ form.username.id_for_label }}">Username</label>
-        {{ form.username }}
-
-        <label for="{{ form.password.id_for_label }}">Password</label>
-        {{ form.password }} {% if form.non_field_errors %}
-        <div class="error" role="alert">{{ form.non_field_errors }}</div>
+      <form method="post" action="">
+        {% csrf_token %} {% if next %}
+        <input type="hidden" name="next" value="{{ next }}" />
         {% endif %}
 
-        <button class="button" type="submit">Sign in securely â†’</button>
+        <label class="auth-label" for="id_username"> Username </label>
+        <input
+          class="auth-input"
+          type="text"
+          name="username"
+          id="id_username"
+          placeholder="Enter your username"
+          autocomplete="username"
+          value="{{ form.username.value|default_if_none:'' }}"
+          required
+          autofocus
+        />
+
+        {% if form.username.errors %}
+        <div class="auth-error">{{ form.username.errors }}</div>
+        {% endif %}
+
+        <label class="auth-label" for="id_password"> Password </label>
+        <input
+          class="auth-input"
+          type="password"
+          name="password"
+          id="id_password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        />
+
+        {% if form.password.errors %}
+        <div class="auth-error">{{ form.password.errors }}</div>
+        {% endif %}
+
+        <button class="auth-submit" type="submit">Sign in securely</button>
       </form>
 
-      <div class="divider"></div>
-      <p class="muted">
-        Access is controlled by your TrustVault account permissions.
-      </p>
+      <div class="auth-notice">
+        <strong>Protected access</strong><br />
+        Your available documents and actions depend on your TrustVault account
+        permissions. Signing in does not grant administrator access.
+      </div>
+
+      <a class="auth-back" href="/documents/"> &larr; Back to documents </a>
     </section>
   </div>
 </div>
 {% endblock %}
-

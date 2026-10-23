@@ -1,3 +1,4 @@
 from django.contrib import admin
 
-# Register your models here.
+# Documents are not registered here on purpose.
+# Staff must not bypass custody checks by opening files in /admin/.

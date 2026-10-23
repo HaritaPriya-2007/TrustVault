@@ -1,0 +1,70 @@
+<aside class="rail">
+  <a class="mark" href="{% url 'my_documents' %}">
+    <span class="seal">TV</span>
+    <strong>TrustVault</strong>
+  </a>
+
+  <nav>
+    <a
+      href="{% url 'dashboard' %}"
+      {%
+      if
+      nav=""
+      ="board"
+      %}class="on"
+      {%
+      endif
+      %}
+    >
+      Board
+    </a>
+
+    <a
+      href="{% url 'my_documents' %}"
+      {%
+      if
+      nav=""
+      ="shelf"
+      %}class="on"
+      {%
+      endif
+      %}
+    >
+      Document shelf
+    </a>
+
+    {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
+    <a
+      href="{% url 'upload_document' %}"
+      {%
+      if
+      nav=""
+      ="upload"
+      %}class="on"
+      {%
+      endif
+      %}
+    >
+      Lodge a file
+    </a>
+    {% endif %} {% if request.user.role == "ADMIN" %}
+    <a
+      href="{% url 'audit:audit_log' %}"
+      {%
+      if
+      nav=""
+      ="ledger"
+      %}class="on"
+      {%
+      endif
+      %}
+    >
+      Activity ledger
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="foot">
+    Custody is checked on the server for every read, change, share and removal.
+  </div>
+</aside>

@@ -1,116 +1,83 @@
 ﻿{% extends "documents/base.html" %}
-{% block title %}My Documents | TrustVault{% endblock %}
+
+{% block title %}Shelf | TrustVault{% endblock %}
+
 {% block body %}
-<div class="app">
-  <aside class="sidebar">
-    <a class="brand" href="{% url 'my_documents' %}">
-      <span class="brand-mark">TV</span>
-      <span class="brand-name">TrustVault</span>
-    </a>
+<div class="shell">
+  {% include "documents/_chrome.html" with nav="shelf" %}
 
-    <div class="nav-label">Workspace</div>
-    <nav class="nav">
-      <a href="{% url 'my_documents' %}" class="active">
-        <span class="nav-icon">DOC</span>
-        <span class="nav-text">My Documents</span>
-      </a>
-      {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
-      <a href="{% url 'upload_document' %}">
-        <span class="nav-icon">+</span>
-        <span class="nav-text">Upload</span>
-      </a>
-      {% endif %}
-    </nav>
-
-    <div class="sidebar-bottom">
-      <strong>TRUSTVAULT</strong><br />
-      Private document workspace
-    </div>
-  </aside>
-
-  <div class="workspace">
-    <header class="topbar">
+  <div class="stage">
+    <header class="mast">
       <div>
-        <span class="topbar-label">WORKSPACE / DOCUMENTS</span>
-        <strong>My Documents</strong>
+        <div class="muted">VAULT / SHELF</div>
+        <strong>Document shelf</strong>
       </div>
-      <div class="user-pill">
-        <span class="avatar">{{ request.user.username|first|upper }}</span>
-        <span>{{ request.user.username }}</span>
+      <div class="who">
+        <b>{{ request.user.username|first|upper }}</b>
+        <span>{{ request.user.username }} &middot; {{ request.user.get_role_display }}</span>
       </div>
     </header>
 
-    <main class="content">
-      <section class="page-heading">
+    <main class="page">
+      <div class="head">
         <div>
-          <h1>Your document space</h1>
-          <p class="subtitle">Manage the documents you own and those shared with you.</p>
+          <h1>Files in your custody</h1>
+          <p class="lede">Search by name, owner, category and date. Actions follow the grant, not the menu.</p>
         </div>
-        {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
-        <a class="button" href="{% url 'upload_document' %}">+ Upload document</a>
+        {% if can_upload %}
+          <a class="btn" href="{% url 'upload_document' %}">Lodge a file</a>
         {% endif %}
-      </section>
+      </div>
 
-      <section class="card">
-        <div class="page-heading" style="margin-bottom: 18px">
-          <div>
-            <h2 style="margin: 0 0 5px">Accessible documents</h2>
-            <p class="subtitle">Actions depend on your document permissions.</p>
+      <section class="panel">
+        <form method="get" class="filters">
+          <div><label for="id_q">Name</label>{{ search.q }}</div>
+          <div><label for="id_owner">Owner</label>{{ search.owner }}</div>
+          <div><label for="id_category">Category</label>{{ search.category }}</div>
+          <div><label for="id_after">From date</label>{{ search.after }}</div>
+          <div><label for="id_before">To date</label>{{ search.before }}</div>
+          <div style="align-self: end;">
+            <button class="btn" type="submit">Search</button>
+            <a class="btn quiet" href="{% url 'my_documents' %}">Clear</a>
           </div>
-          <span class="tag">PRIVATE WORKSPACE</span>
-        </div>
+        </form>
 
-        <div class="document-list">
-          {% for item in document_items %}
-          <article class="document-item">
-            <div class="document-info">
-              <div class="file-icon">FILE</div>
-              <div>
-                <p class="document-title">{{ item.document.title }}</p>
-                <div class="muted">{{ item.document.category }}</div>
-                <div class="muted">
-                  Owner: {{ item.document.owner.username }}
-                  {% if item.document.owner_id == request.user.pk %}
-                  <span class="tag">OWNED BY YOU</span>
-                  {% endif %}
-                  {% if item.document.owner_id != request.user.pk %}
-                  <span class="tag">SHARED WITH YOU</span>
-                  {% endif %}
-                </div>
+        {% if categories %}
+          <p class="muted">Known categories:
+            {% for cat in categories %}
+              <a class="chip" href="?category={{ cat|urlencode }}">{{ cat }}</a>
+            {% endfor %}
+          </p>
+        {% endif %}
+
+        {% for item in rows %}
+          <article class="row">
+            <div>
+              <strong>{{ item.document.title }}</strong>
+              <div class="muted">{{ item.document.category }} &middot; {{ item.document.original_filename }}</div>
+              <div class="muted">
+                Owner {{ item.document.owner.username }}
+                &middot; lodged {{ item.document.created_at|date:"Y-m-d" }}
+                {% if item.owned %}<span class="chip">yours</span>{% else %}<span class="chip">granted</span>{% endif %}
               </div>
             </div>
-
-            <div class="button-row">
-              {% if item.can_download %}
-              <a class="button small" href="{% url 'download_document' document_id=item.document.pk %}">Download</a>
-              {% endif %}
-              {% if item.can_edit %}
-              <a class="button secondary small" href="{% url 'edit_document' document_id=item.document.pk %}">Edit details</a>
-              {% endif %}
-              {% if item.document.owner_id == request.user.pk %}
-              <a class="button secondary small" href="{% url 'share_document' document_id=item.document.pk %}">Share</a>
-              {% endif %}
+            <div>
+              <a class="btn small quiet" href="{% url 'inspect_document' document_id=item.document.pk %}">Dossier</a>
+              {% if item.can_read %}<a class="btn small" href="{% url 'download_document' document_id=item.document.pk %}">Download</a>{% endif %}
+              {% if item.can_edit %}<a class="btn small quiet" href="{% url 'edit_document' document_id=item.document.pk %}">Amend</a>{% endif %}
+              {% if item.can_share %}<a class="btn small quiet" href="{% url 'share_document' document_id=item.document.pk %}">Grant</a>{% endif %}
+              {% if item.can_retire %}<a class="btn small danger" href="{% url 'retire_document' document_id=item.document.pk %}">Retire</a>{% endif %}
             </div>
           </article>
-          {% empty %}
-          <div class="empty-state">
-            <div class="empty-icon">FILE</div>
-            <h3>No documents yet</h3>
-            <p>Documents you own or that are shared with you will appear here.</p>
-            {% if request.user.role == "OWNER" or request.user.role == "ADMIN" %}
-            <a class="button" href="{% url 'upload_document' %}">Upload your first document</a>
-            {% endif %}
-          </div>
-          {% endfor %}
-        </div>
+        {% empty %}
+          <p class="muted">Nothing in reach matches this search.</p>
+        {% endfor %}
       </section>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 18px">
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit" class="button secondary">Sign out</button>
-        </form>
-      </div>
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 22px; text-align: right">
+        {% csrf_token %}
+        <button class="btn quiet" type="submit">Sign out</button>
+      </form>
     </main>
   </div>
 </div>

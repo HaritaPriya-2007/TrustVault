@@ -1,31 +1,36 @@
-
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from .models import Document, DocumentGrant
 
 
+SUPPORTED_CAPABILITIES = frozenset({"read", "edit", "delete", "share"})
+
+
+def owner_or_live_grant(user):
+    return Q(owner_id=user.pk) | Q(
+        grants__user_id=user.pk,
+        grants__revoked_at__isnull=True,
+    )
+
+
 def get_authorized_document(user, document_id, action="read"):
     """
-    Return a document only if the authenticated user
-    is authorized for the requested action.
+    Return a document only when the signed-in person may perform `action`.
 
-    Supported actions: read, edit, delete, share.
-    Administrators do not automatically get document access.
+    The lookup itself is limited to owned records and live grants, so a
+    stranger asking for someone else's id receives the same 404 as a
+    made-up id. Administrators do not inherit document custody.
     """
-
     if not user or not user.is_authenticated:
-        raise PermissionDenied("Authentication required.")
+        raise PermissionDenied("Sign in is required.")
 
-    if action not in {"read", "edit", "delete", "share"}:
+    if action not in SUPPORTED_CAPABILITIES:
         raise ValueError("Unsupported document action.")
 
-    # Scope the lookup to the owner or a currently active grant.
-    # An unauthorized user gets the same 404 as an unknown ID.
     document = get_object_or_404(
-        Document.objects.filter(
-            models_Q_owner_or_active_grant(user)
-        ).distinct(),
+        Document.objects.filter(owner_or_live_grant(user)).distinct(),
         pk=document_id,
     )
 
@@ -33,7 +38,7 @@ def get_authorized_document(user, document_id, action="read"):
         return document
 
     if action in {"delete", "share"}:
-        raise PermissionDenied("Only the owner can perform this action.")
+        raise PermissionDenied("Only the document owner can do that.")
 
     grant = DocumentGrant.objects.filter(
         document_id=document.pk,
@@ -42,18 +47,9 @@ def get_authorized_document(user, document_id, action="read"):
     ).first()
 
     if grant is None:
-        raise PermissionDenied("No active document grant.")
+        raise PermissionDenied("No live custody grant.")
 
     if action == "edit" and grant.access_level != DocumentGrant.AccessLevel.EDIT:
-        raise PermissionDenied("Edit permission required.")
+        raise PermissionDenied("An edit grant is required.")
 
     return document
-
-
-def models_Q_owner_or_active_grant(user):
-    from django.db.models import Q
-
-    return Q(owner_id=user.pk) | Q(
-        grants__user_id=user.pk,
-        grants__revoked_at__isnull=True,
-    )

@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TrustVault | Audit Log</title>
+
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: Arial, sans-serif;
         margin: 0;
@@ -12,10 +17,21 @@
         background: #f4f7fb;
         color: #172033;
       }
+
       .container {
         max-width: 1200px;
         margin: auto;
       }
+
+      h1 {
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #64748b;
+        margin-bottom: 24px;
+      }
+
       .panel {
         background: white;
         padding: 20px;
@@ -23,84 +39,181 @@
         margin-bottom: 20px;
         box-shadow: 0 2px 8px #0000000d;
       }
+
       .valid {
         color: #137547;
         font-weight: bold;
       }
+
       .invalid {
         color: #b42318;
         font-weight: bold;
       }
+
+      .warning {
+        background: #fff4f2;
+        border: 1px solid #fecdca;
+      }
+
       form {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
+        align-items: center;
       }
+
       select,
       button {
-        padding: 10px;
+        padding: 10px 12px;
         border: 1px solid #ccd3df;
         border-radius: 6px;
+        font-size: 14px;
       }
+
+      select {
+        background: white;
+        color: #172033;
+      }
+
       button {
         background: #173b70;
         color: white;
         cursor: pointer;
       }
+
+      button:hover {
+        background: #102b54;
+      }
+
+      .clear-link {
+        padding: 10px 0;
+      }
+
       .table-wrap {
         overflow-x: auto;
       }
+
       table {
         width: 100%;
         border-collapse: collapse;
         background: white;
       }
+
       th,
       td {
         padding: 12px;
         text-align: left;
         border-bottom: 1px solid #e6eaf0;
-        white-space: nowrap;
+        vertical-align: top;
       }
+
       th {
         background: #edf2f8;
+        color: #26364d;
+        font-size: 13px;
       }
+
+      td {
+        font-size: 14px;
+      }
+
       .details {
-        white-space: normal;
-        max-width: 280px;
+        overflow-wrap: anywhere;
+        min-width: 180px;
+        max-width: 300px;
       }
+
+      .outcome-success {
+        color: #137547;
+        font-weight: bold;
+      }
+
+      .outcome-failed {
+        color: #b42318;
+        font-weight: bold;
+      }
+
       a {
         color: #174ea6;
       }
+
+      a:hover {
+        text-decoration: none;
+      }
+
       .pagination {
         display: flex;
         gap: 14px;
+        align-items: center;
         margin-top: 20px;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 24px;
+        color: #64748b;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 12px;
+        }
+
+        .panel {
+          padding: 14px;
+        }
+
+        form {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        select,
+        button {
+          width: 100%;
+        }
       }
     </style>
   </head>
+
   <body>
     <div class="container">
       <h1>TrustVault Audit Log</h1>
-      <p>Review recorded activity and verify audit-event integrity.</p>
 
-      <section class="panel">
+      <p class="subtitle">
+        Review recorded activity and verify audit-event integrity.
+      </p>
+
+      <!-- Audit chain verification -->
+      <section
+        class="panel {% if not chain_valid %}warning{% endif %}"
+        aria-live="polite"
+      >
         {% if chain_valid %}
         <p class="valid">Audit chain integrity: VERIFIED</p>
+        <p>All checked events passed the current integrity verification.</p>
         {% else %}
         <p class="invalid">Audit chain integrity: VERIFICATION FAILED</p>
+        <p>
+          One or more audit events could not be verified. The ledger should not
+          be treated as fully verified until the issue is investigated.
+        </p>
+
+        {% if chain_errors %}
         <ul>
           {% for error in chain_errors %}
           <li>{{ error }}</li>
           {% endfor %}
         </ul>
-        {% endif %}
+        {% endif %} {% endif %}
       </section>
 
+      <!-- Action and outcome filters -->
       <section class="panel">
         <form method="get">
-          <select name="action">
+          <select name="action" aria-label="Filter by action">
             <option value="">All actions</option>
+
             {% for value, label in actions %}
             <option
               value="{{ value }}"
@@ -117,8 +230,9 @@
             {% endfor %}
           </select>
 
-          <select name="status">
+          <select name="status" aria-label="Filter by outcome">
             <option value="">All outcomes</option>
+
             <option
               value="success"
               {%
@@ -131,6 +245,7 @@
             >
               Successful
             </option>
+
             <option
               value="failed"
               {%
@@ -146,10 +261,14 @@
           </select>
 
           <button type="submit">Filter</button>
-          <a href="{% url 'audit:audit_log' %}">Clear filters</a>
+
+          <a class="clear-link" href="{% url 'audit:audit_log' %}">
+            Clear filters
+          </a>
         </form>
       </section>
 
+      <!-- Audit events table -->
       <section class="panel table-wrap">
         <table>
           <thead>
@@ -163,54 +282,73 @@
               <th>Details</th>
             </tr>
           </thead>
+
           <tbody>
             {% for event in page_obj %}
             <tr>
               <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+
               <td>
                 {% if event.actor %} {{ event.actor }} {% else %} System /
                 deleted user {% endif %}
               </td>
+
               <td>{{ event.get_action_display }}</td>
+
               <td>
                 {% if event.document %} {{ event.document.title }} {% else %} —
                 {% endif %}
               </td>
-              <td>{% if event.success %}Success{% else %}Failed{% endif %}</td>
+
+              <td>
+                {% if event.success %}
+                <span class="outcome-success">Success</span>
+                {% else %}
+                <span class="outcome-failed">Failed</span>
+                {% endif %}
+              </td>
+
               <td>{{ event.ip_address|default:"—" }}</td>
+
               <td class="details">{{ event.details }}</td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="7">No audit events match these filters.</td>
+              <td colspan="7" class="empty">
+                No audit events match these filters.
+              </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
 
+        <!-- Pagination preserves active filters -->
         <div class="pagination">
           {% if page_obj.has_previous %}
           <a
-            href="?action={{ selected_action|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.previous_page_number }}"
-            >Previous</a
+            href="?action={{ selected_action|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page_obj.previous_page_number }}"
           >
+            Previous
+          </a>
           {% endif %}
 
-          <span
-            >Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages
-            }}</span
-          >
+          <span>
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
 
           {% if page_obj.has_next %}
           <a
-            href="?action={{ selected_action|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.next_page_number }}"
-            >Next</a
+            href="?action={{ selected_action|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page_obj.next_page_number }}"
           >
+            Next
+          </a>
           {% endif %}
         </div>
       </section>
 
-      <p><a href="/documents/">Back to documents</a></p>
+      <p>
+        <a href="/documents/">Back to documents</a>
+      </p>
     </div>
   </body>
 </html>

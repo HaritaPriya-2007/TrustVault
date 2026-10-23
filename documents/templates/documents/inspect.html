@@ -1,0 +1,63 @@
+﻿{% extends "documents/base.html" %}
+
+{% block title %}Document Dossier | TrustVault{% endblock %}
+
+{% block body %}
+<div class="shell">
+  {% include "documents/_chrome.html" with nav="shelf" %}
+
+  <div class="stage">
+    <header class="mast">
+      <div>
+        <div class="muted">VAULT / DOSSIER</div>
+        <strong>Document details</strong>
+      </div>
+      <div class="who">
+        <b>{{ request.user.username|first|upper }}</b>
+        <span>{{ request.user.username }} &middot; {{ request.user.get_role_display }}</span>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="head">
+        <div>
+          <h1>{{ document.title }}</h1>
+          <p class="lede">Document information and custody details.</p>
+        </div>
+        <a class="btn quiet" href="{% url 'my_documents' %}">Back to shelf</a>
+      </div>
+
+      <section class="panel">
+        <h2>Document information</h2>
+        <p><strong>Title:</strong> {{ document.title }}</p>
+        <p><strong>Category:</strong> {{ document.category|default:"Uncategorized" }}</p>
+        <p><strong>Description:</strong> {{ document.description|default:"No description provided." }}</p>
+        <p><strong>Original filename:</strong> {{ document.original_filename }}</p>
+        <p><strong>Owner:</strong> {{ document.owner.username }}</p>
+        <p><strong>File size:</strong> {{ document.size_bytes }} bytes</p>
+        <p><strong>Uploaded:</strong> {{ document.created_at|date:"Y-m-d H:i" }}</p>
+        <p><strong>Last updated:</strong> {{ document.updated_at|date:"Y-m-d H:i" }}</p>
+        <p><strong>Custody:</strong>
+          {% if owned %}Owned by you{% else %}Shared with you{% endif %}
+        </p>
+        {% if can_edit %}
+          <p class="muted">You have permission to edit this document.</p>
+        {% endif %}
+      </section>
+
+      <p style="margin-top: 20px;">
+        <a class="btn quiet" href="{% url 'my_documents' %}">Return to shelf</a>
+        <a class="btn" href="{% url 'download_document' document_id=document.pk %}">Download document</a>
+        {% if can_edit %}
+          <a class="btn quiet" href="{% url 'edit_document' document_id=document.pk %}">Amend details</a>
+        {% endif %}
+      </p>
+
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 22px; text-align: right">
+        {% csrf_token %}
+        <button class="btn quiet" type="submit">Sign out</button>
+      </form>
+    </main>
+  </div>
+</div>
+{% endblock %}
