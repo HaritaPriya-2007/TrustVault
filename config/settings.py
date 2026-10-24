@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +25,6 @@ def _read_env_file(path: Path) -> None:
         key, value = line.split("=", 1)
         key = key.strip()
         value = value.strip().strip("'").strip('"')
-
         os.environ.setdefault(key, value)
 
 
@@ -93,6 +93,7 @@ INSTALLED_APPS = [
 # Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -120,13 +121,26 @@ TEMPLATES = [
     },
 ]
 
-# Database — existing SQLite database is preserved
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Database:
+# Use PostgreSQL when DATABASE_URL is set on Render.
+# Otherwise, preserve the existing local SQLite database.
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -154,6 +168,18 @@ AUTH_PASSWORD_VALIDATORS = [
             "NumericPasswordValidator"
         )
     },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "CommonPasswordValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "NumericPasswordValidator"
+        )
+    },
 ]
 
 # Internationalization
@@ -166,7 +192,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Private document storage — preserves the existing storage location
+# Private document storage
 PRIVATE_DOCUMENT_ROOT = Path(
     os.environ.get(
         "TRUSTVAULT_FILE_ROOT",
@@ -194,9 +220,9 @@ CSRF_COOKIE_HTTPONLY = True
 SECURE_REFERRER_POLICY = "same-origin"
 
 # HTTPS settings
-# Defaults are suitable for local HTTP development.
-# Enable these only after HTTPS is correctly configured in production.
-SECURE_SSL_REDIRECT = _env_bool("DJANGO_SECURE_SSL_REDIRECT", "False")
+SECURE_SSL_REDIRECT = _env_bool(
+    "DJANGO_SECURE_SSL_REDIRECT", "False"
+)
 
 SECURE_HSTS_SECONDS = int(
     os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "0")
@@ -210,7 +236,13 @@ SECURE_HSTS_PRELOAD = _env_bool(
     "DJANGO_SECURE_HSTS_PRELOAD", "False"
 )
 
-# Secure cookies are enabled outside development and test mode.
+# Render terminates HTTPS at its proxy.
+# Only trust the forwarded protocol header in the deployment environment
+# where the app is behind Render's trusted proxy.
+if os.environ.get("RENDER") == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Secure cookies outside development and test mode
 if not DEBUG and not RUNNING_TESTS:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
