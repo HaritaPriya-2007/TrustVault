@@ -327,10 +327,14 @@
 
           <div class="who">
             <b>{{ request.user.username|first|upper }}</b>
-            <span
-              >{{ request.user.username }} &middot; {{
-              request.user.get_role_display }}</span
-            >
+            <span>
+              {{ request.user.username }} &middot;
+              {% if request.user.is_superuser %}
+                Administrator
+              {% else %}
+                {{ request.user.get_role_display|default:request.user.role|title }}
+              {% endif %}
+            </span>
           </div>
         </header>
 

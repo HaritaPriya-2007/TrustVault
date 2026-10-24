@@ -1,0 +1,344 @@
+{% extends "documents/base.html" %}
+
+{% block title %}Manage Access | TrustVault{% endblock %}
+
+{% block crumb %}VAULT / ACCESS{% endblock %}
+
+{% block mast %}Document access{% endblock %}
+
+{% block page %}
+<style>
+  .share-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .share-header h1 {
+    margin: 0 0 8px;
+    font-size: 1.8rem;
+    letter-spacing: -0.04em;
+  }
+
+  .share-muted {
+    color: var(--muted, #64748b);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .share-card {
+    padding: 24px;
+    margin-bottom: 22px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 16px;
+    background: var(--surface, #fff);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  }
+
+  .share-card h2 {
+    margin-top: 0;
+    font-size: 1.15rem;
+  }
+
+  .share-document-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 20px;
+  }
+
+  .share-detail-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted, #64748b);
+    font-size: 0.8rem;
+  }
+
+  .share-detail-value {
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+
+  .share-form label {
+    display: block;
+    margin: 16px 0 7px;
+    font-weight: 650;
+    font-size: 0.9rem;
+  }
+
+  .share-form input,
+  .share-form select,
+  .share-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border, #cbd5e1);
+    border-radius: 10px;
+    background: var(--background, #fff);
+    color: inherit;
+    font: inherit;
+  }
+
+  .share-form input:focus,
+  .share-form select:focus,
+  .share-form textarea:focus {
+    outline: 2px solid var(--accent, #6366f1);
+    outline-offset: 2px;
+  }
+
+  .share-note {
+    margin: 18px 0;
+    padding: 14px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 10px;
+    color: var(--muted, #64748b);
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+
+  .share-error {
+    margin-top: 8px;
+    color: #b91c1c;
+    font-size: 0.85rem;
+  }
+
+  .share-list {
+    margin-top: 18px;
+  }
+
+  .share-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 17px 0;
+    border-top: 1px solid var(--border, #e2e8f0);
+  }
+
+  .share-item:first-child {
+    border-top: 0;
+  }
+
+  .share-person {
+    min-width: 0;
+  }
+
+  .share-person strong {
+    overflow-wrap: anywhere;
+  }
+
+  .share-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--badge-bg, #eef2ff);
+    color: var(--badge-text, #4338ca);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .share-empty {
+    padding: 18px 0 4px;
+    color: var(--muted, #64748b);
+    line-height: 1.6;
+  }
+
+  .share-actions form {
+    margin: 0;
+  }
+
+  .share-revoke {
+    padding: 9px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fff7f7;
+    color: #b91c1c;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .share-revoke:hover {
+    background: #fee2e2;
+  }
+
+  .share-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent, #4f46e5);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .share-button-secondary {
+    border: 1px solid var(--border, #e2e8f0);
+    background: var(--surface, #fff);
+    color: inherit;
+  }
+
+  @media (max-width: 700px) {
+    .share-document-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .share-item {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>
+
+<div class="share-header">
+  <div>
+    <h1>Manage document access</h1>
+    <p class="share-muted">
+      Grant access to trusted users and manage existing permissions.
+    </p>
+  </div>
+
+  <a
+    class="share-button share-button-secondary"
+    href="{% url 'my_documents' %}"
+  >
+    Back to document shelf
+  </a>
+</div>
+
+<section class="share-card">
+  <p class="share-muted">SECURE DOCUMENT</p>
+  <h2>{{ document.title }}</h2>
+
+  <div class="share-document-grid">
+    <div>
+      <span class="share-detail-label">Filename</span>
+      <div class="share-detail-value">
+        {{ document.original_filename|default:"Not available" }}
+      </div>
+    </div>
+
+    <div>
+      <span class="share-detail-label">Owner</span>
+      <div class="share-detail-value">{{ document.owner.username }}</div>
+    </div>
+
+    <div>
+      <span class="share-detail-label">Category</span>
+      <div class="share-detail-value">
+        {{ document.category|default:"Uncategorized" }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="share-card">
+  <h2>Grant or update access</h2>
+  <p class="share-muted">
+    Enter the username of an existing active TrustVault account.
+  </p>
+
+  <form class="share-form" method="post">
+    {% csrf_token %} {% if form.non_field_errors %}
+    <div class="share-error">{{ form.non_field_errors }}</div>
+    {% endif %} {% for field in form %}
+    <label for="{{ field.id_for_label }}">
+      {{ field.label }} {% if field.field.required %}*{% endif %}
+    </label>
+
+    {{ field }} {% if field.help_text %}
+    <p class="share-muted">{{ field.help_text }}</p>
+    {% endif %} {% if field.errors %}
+    <div class="share-error">{{ field.errors }}</div>
+    {% endif %} {% endfor %}
+
+    <div class="share-note">
+      <strong>Read access:</strong> Allows viewing and downloading as permitted
+      by your application.
+      <br />
+      <strong>Edit access:</strong> Provides additional editing permissions
+      according to your application's permission rules.
+    </div>
+
+    <button class="share-button" type="submit">Save access permissions</button>
+  </form>
+</section>
+
+<section class="share-card">
+  <h2>Current access</h2>
+  <p class="share-muted">
+    Users who currently have an active grant for this document.
+  </p>
+
+  <div class="share-list">
+    {% for grant in live_grants %}
+    <div class="share-item">
+      <div class="share-person">
+        <strong>{{ grant.user.username }}</strong>
+        <span class="share-badge"> {{ grant.get_access_level_display }} </span>
+
+        <p class="share-muted">
+          Granted by {{ grant.granted_by.username|default:"Unknown" }}
+          <br />
+          {{ grant.granted_at|date:"d M Y, H:i" }}
+        </p>
+      </div>
+
+      <div class="share-actions">
+        <form
+          method="post"
+          action="{% url 'revoke_document_access' document.pk grant.pk %}"
+          onsubmit="
+            return confirm('Are you sure you want to revoke this access?');
+          "
+        >
+          {% csrf_token %}
+          <button class="share-revoke" type="submit">Revoke access</button>
+        </form>
+      </div>
+    </div>
+    {% empty %}
+    <p class="share-empty">
+      No users currently have an active grant for this document.
+    </p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="share-card">
+  <h2>Previously revoked access</h2>
+  <p class="share-muted">
+    Previously revoked grants are listed here for reference.
+  </p>
+
+  <div class="share-list">
+    {% for grant in withdrawn_grants %}
+    <div class="share-item">
+      <div class="share-person">
+        <strong>{{ grant.user.username }}</strong>
+        <span class="share-badge"> {{ grant.get_access_level_display }} </span>
+
+        <p class="share-muted">
+          Revoked {% if grant.revoked_at %} {{ grant.revoked_at|date:"d M Y,
+          H:i" }} {% else %} — date unavailable {% endif %}
+        </p>
+      </div>
+    </div>
+    {% empty %}
+    <p class="share-empty">No previously revoked grants.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

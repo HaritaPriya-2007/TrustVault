@@ -14,3 +14,11 @@ staticfiles/
 
 db.sqlite3.backup
 db.sqlite3.backup-*
+
+# Local document backups
+private_documents.backup/
+db.sqlite3.backup
+
+# Temporary template diagnostic scripts
+check_share_template.py
+fix_share_header.py
