@@ -11,3 +11,6 @@ media/
 staticfiles/
 .pytest_cache/
 .coverage
+
+db.sqlite3.backup
+db.sqlite3.backup-*
